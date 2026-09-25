@@ -29,6 +29,28 @@ edge.commands.load("interactions");
 client.login("...");
 ```
 
+The same works from TypeScript, with full type information out of the box:
+```ts
+import { ForgeClient } from "@tryforge/forgescript";
+import { QuorielEdge } from "@quoriel/edge";
+
+const edge = new QuorielEdge({
+    events: ["interactionCreate"]
+});
+
+const client = new ForgeClient({ extensions: [edge] });
+
+edge.commands.load("interactions");
+
+client.login("...");
+```
+
+## TypeScript
+QuorielEdge is written in TypeScript and ships its own declaration files - no
+`@types` package is needed. `require()` from JavaScript and `import` from
+TypeScript both resolve to the same compiled `dist/` output, so both are
+fully supported.
+
 ## Useful
 - Configure the class to use cache functions [View documentation](docs/CACHE.md)
 - Events and commands with advanced routing and filtering [View documentation](docs/EVENTS.md)
