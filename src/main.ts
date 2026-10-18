@@ -63,3 +63,5 @@ export class QuorielEdge extends ForgeExtension {
 }
 
 export { Command, resolveDefault, extractFunctions, features };
+
+export type * from "./types";
