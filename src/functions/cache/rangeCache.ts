@@ -1,7 +1,8 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
-import { caches } from "../../core/utils";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
+import { getTable } from "../../core/utils";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$rangeCache",
     description: "Retrieves all entries from the cache",
     version: "1.0.0",
@@ -19,7 +20,7 @@ export default new NativeFunction({
     ],
     execute(ctx, [table]) {
         const result: { key: string; value: unknown }[] = [];
-        for (const item of caches.get(table)!) result.push({ key: item[0], value: item[1] });
+        for (const item of getTable(table)) result.push({ key: item[0], value: item[1] });
         return this.successJSON(result as any);
     }
 });

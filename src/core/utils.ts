@@ -1,5 +1,6 @@
 import { Context } from "@tryforge/forgescript";
 import { resolveDefault } from "./structures";
+import { EdgeError } from "./errors";
 import type { FeatureName, QuorielEdgeOptions } from "../types";
 
 const caches = new Map<string, Map<string, unknown>>();
@@ -10,6 +11,12 @@ const featureSet = new Set<FeatureName>();
  * empty before it runs.
  */
 export const features: ReadonlySet<FeatureName> = featureSet;
+
+export function getTable(name: string): Map<string, unknown> {
+    const table = caches.get(name);
+    if (!table) throw new EdgeError(`Unknown cache table "${name}"`);
+    return table;
+}
 
 export function initUtils(options?: QuorielEdgeOptions): void {
     if (options?.caches) {

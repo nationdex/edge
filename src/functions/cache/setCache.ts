@@ -1,7 +1,8 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
-import { caches } from "../../core/utils";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
+import { getTable } from "../../core/utils";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$setCache",
     description: "Sets a cache variable to the specified value",
     version: "1.0.0",
@@ -31,7 +32,7 @@ export default new NativeFunction({
         }
     ],
     execute(ctx, [table, name, value]) {
-        caches.get(table)!.set(name, value);
+        getTable(table).set(name, value);
         return this.success();
     }
 });

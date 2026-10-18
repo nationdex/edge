@@ -1,7 +1,8 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
 import { jsonMath } from "../../core/utils";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$jsonDivide",
     description: "Divides a JSON key by a number",
     version: "1.0.0",

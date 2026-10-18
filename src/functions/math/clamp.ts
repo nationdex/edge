@@ -1,6 +1,7 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$clamp",
     description: "Clamps the value to the specified range",
     version: "1.0.0",

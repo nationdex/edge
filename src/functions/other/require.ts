@@ -1,7 +1,9 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
+import { EdgeError } from "../../core/errors";
 import { resolve } from "path";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$require",
     description: "Dynamically loads the module",
     version: "1.0.0",
@@ -18,6 +20,10 @@ export default new NativeFunction({
         }
     ],
     execute(ctx, [path]) {
-        return this.successJSON(require(resolve(process.cwd(), path)));
+        try {
+            return this.successJSON(require(resolve(process.cwd(), path)));
+        } catch (error: any) {
+            throw new EdgeError(`Cannot require "${path}": ${error.message}`);
+        }
     }
 });

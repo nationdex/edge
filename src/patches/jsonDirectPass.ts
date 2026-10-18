@@ -4,7 +4,7 @@ const original = Context.prototype.getEnvironmentKey;
 
 Context.prototype.getEnvironmentKey = function (this: any, ...args: string[]) {
     const arg = args[0];
-    if (arg.startsWith("[") || arg.startsWith("{")) {
+    if (typeof arg === "string" && (arg.startsWith("[") || arg.startsWith("{"))) {
         try {
             const parsed = JSON.parse(arg);
             if (args.length === 1) return parsed;

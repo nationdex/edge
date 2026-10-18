@@ -1,7 +1,8 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
-import { caches } from "../../core/utils";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
+import { getTable } from "../../core/utils";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$keysCache",
     description: "Returns all keys from the cache joined by a separator",
     version: "1.0.0",
@@ -24,6 +25,6 @@ export default new NativeFunction({
         }
     ],
     execute(ctx, [table, separator]) {
-        return this.success([...caches.get(table)!.keys()].join(separator || ", "));
+        return this.success([...getTable(table).keys()].join(separator || ", "));
     }
 });

@@ -1,7 +1,8 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
-import { caches } from "../../core/utils";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
+import { getTable } from "../../core/utils";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$getCache",
     description: "Retrieves and loads data from the cache by variable",
     version: "1.0.0",
@@ -31,7 +32,7 @@ export default new NativeFunction({
         }
     ],
     execute(ctx, [table, name, variable]) {
-        const value = caches.get(table)!.get(name);
+        const value = getTable(table).get(name);
         if (variable) {
             ctx.setEnvironmentKey(variable, value);
             return this.success();
