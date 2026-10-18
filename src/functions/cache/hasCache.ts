@@ -1,7 +1,8 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
-import { caches } from "../../core/utils";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
+import { getTable } from "../../core/utils";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$hasCache",
     description: "Checks if a cache key exists",
     version: "1.0.0",
@@ -25,6 +26,6 @@ export default new NativeFunction({
         }
     ],
     execute(ctx, [table, name]) {
-        return this.success(caches.get(table)!.has(name));
+        return this.success(getTable(table).has(name));
     }
 });

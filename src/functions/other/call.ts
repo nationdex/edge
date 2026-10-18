@@ -1,6 +1,8 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
+import { EdgeError } from "../../core/errors";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$call",
     description: "Calls a local JS function defined in the command file",
     version: "1.0.0",
@@ -24,6 +26,10 @@ export default new NativeFunction({
         }
     ],
     async execute(ctx, [name, args]) {
-        return this.successJSON(await (ctx.cmd!.data as any).functions[name](...args));
+        const fn = (ctx.cmd?.data as any)?.functions?.[name];
+        if (typeof fn !== "function") {
+            throw new EdgeError(`Local function "${name}" is not defined in this command file`);
+        }
+        return this.successJSON(await fn(...args));
     }
 });

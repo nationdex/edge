@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import { dirname } from "path";
-import * as Module from "module";
+import Module from "module";
 import * as acorn from "acorn";
 import type { LocalFunction } from "../types";
 
@@ -69,7 +69,7 @@ export function extractFunctions(path: string): Record<string, LocalFunction> {
     for (const name of names) {
         collect += `if (typeof ${name} === "function") __lcf["${name}"] = ${name};`;
     }
-    const m = new (Module as any)(path);
+    const m = new Module(path) as any;
     m.filename = path;
     m.paths = (Module as any)._nodeModulePaths(dirname(path));
     m._compile(`const __lcf = {};${stripped}\n${collect}module.exports.functions = __lcf;`, path);

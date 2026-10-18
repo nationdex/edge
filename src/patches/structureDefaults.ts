@@ -1,11 +1,12 @@
 import { Context } from "@tryforge/forgescript";
-import { getStructure, isPlainObject } from "../core/structures";
+import { getStructure, isPlainObject, isUnsafeKey } from "../core/structures";
 
 const originalGet = Context.prototype.getEnvironmentKey;
 const originalAdd = Context.prototype.traverseAddEnvironmentKey;
 
 Context.prototype.traverseAddEnvironmentKey = function (this: any, value: unknown, ...keys: string[]) {
     if (keys.length <= 1) return originalAdd.apply(this, [value, ...keys]);
+    if (keys.some(isUnsafeKey)) return false;
     const root = keys[0];
     let structure = getStructure(root);
     let data: any = originalGet.call(this, root);

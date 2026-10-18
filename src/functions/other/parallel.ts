@@ -1,6 +1,7 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$parallel",
     description: "Runs multiple code blocks in parallel and returns all results as an array",
     version: "1.0.0",

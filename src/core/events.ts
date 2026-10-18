@@ -1,5 +1,5 @@
 import { Emitter } from "@eolthar/events";
-import { Interpreter, Compiler, ForgeClient } from "@tryforge/forgescript";
+import { Interpreter, Compiler, ForgeClient, Logger } from "@tryforge/forgescript";
 import { clearCache, scanDirectory } from "./fs";
 import { extractFunctions } from "./extract";
 import { Command } from "../structures/command";
@@ -35,21 +35,31 @@ export function initEvents(secret: ForgeClient, options: QuorielEdgeOptions): vo
     const sep = options.separator || "-";
     if (options.events?.includes("interactionCreate")) {
         client.on("interactionCreate", (interaction: any) => {
-            if (interaction.isChatInputCommand()) return;
-            const raw = interaction.customId || interaction.commandName;
-            const sp = raw.indexOf(sep);
-            interactions.emit(sp !== -1 ? raw.substring(0, sp) : raw, interaction);
+            try {
+                if (interaction.isChatInputCommand()) return;
+                const raw = interaction.customId || interaction.commandName;
+                if (typeof raw !== "string" || !raw) return;
+                const sp = raw.indexOf(sep);
+                interactions.emit(sp !== -1 ? raw.substring(0, sp) : raw, interaction);
+            } catch (error) {
+                Logger.error(error as any);
+            }
         });
     }
     if (options.events?.includes("messageCreate")) {
         client.on("messageCreate", async (message: any) => {
-            const content = message.content.trim();
-            const sp = content.indexOf(" ");
-            const raw = (sp !== -1 ? content.substring(0, sp) : content).toLowerCase();
-            if (!raw) return;
-            const prefix = await getPrefix(message, raw);
-            const name = prefix ? raw.substring(prefix.length) : raw;
-            commands.emit(name, message, sp !== -1 ? content.substring(sp + 1) : "", prefix !== null);
+            try {
+                if (typeof message.content !== "string") return;
+                const content = message.content.trim();
+                const sp = content.indexOf(" ");
+                const raw = (sp !== -1 ? content.substring(0, sp) : content).toLowerCase();
+                if (!raw) return;
+                const prefix = await getPrefix(message, raw);
+                const name = prefix ? raw.substring(prefix.length) : raw;
+                commands.emit(name, message, sp !== -1 ? content.substring(sp + 1) : "", prefix !== null);
+            } catch (error) {
+                Logger.error(error as any);
+            }
         });
     }
 }
@@ -65,7 +75,7 @@ async function getPrefix(message: any, raw: string): Promise<string | null> {
                 obj: message,
                 doNotSend: true
             })) as unknown as string);
-        if (raw.startsWith(resolved)) return resolved;
+        if (typeof resolved === "string" && resolved && raw.startsWith(resolved)) return resolved;
     }
     return null;
 }
@@ -75,17 +85,25 @@ function registerCommand(cmd: Command, compiled: ReturnType<typeof Compiler.comp
         const filter = compileRules(cmd.data.rules);
         const only = compileOnly(cmd.data.only);
         const handler = async (message: any, rawArgs: string, hasPrefix: boolean) => {
-            if (!filter(message, hasPrefix)) return;
-            if (!(await matchesOnly(only, message, client))) return;
-            const args = rawArgs ? rawArgs.trim().split(/ +/g).filter(Boolean) : [];
-            Interpreter.run({ obj: message, client: client!, data: compiled, command: cmd as any, args, states: { message: { new: message } } });
+            try {
+                if (!filter(message, hasPrefix)) return;
+                if (!(await matchesOnly(only, message, client))) return;
+                const args = rawArgs ? rawArgs.trim().split(/ +/g).filter(Boolean) : [];
+                await Interpreter.run({ obj: message, client: client!, data: compiled, command: cmd as any, args, states: { message: { new: message } } });
+            } catch (error) {
+                Logger.error(error as any);
+            }
         };
         registerHandler(commands, cmd, handler);
     } else {
         const checker = compileAllowed(cmd.data.allowed);
-        const handler = (interaction: any) => {
-            if (!checker(interaction)) return;
-            Interpreter.run({ obj: interaction, client: client!, data: compiled, command: cmd as any, args: [] });
+        const handler = async (interaction: any) => {
+            try {
+                if (!checker(interaction)) return;
+                await Interpreter.run({ obj: interaction, client: client!, data: compiled, command: cmd as any, args: [] });
+            } catch (error) {
+                Logger.error(error as any);
+            }
         };
         registerHandler(interactions, cmd, handler);
     }
@@ -93,17 +111,29 @@ function registerCommand(cmd: Command, compiled: ReturnType<typeof Compiler.comp
 
 function loadFiles(files: string[]): void {
     for (const file of files) {
-        const raw = require(file);
-        const mod = raw?.default ?? raw;
-        const entries = Array.isArray(mod) ? mod : [mod];
-        for (const item of entries) {
-            if (!item) continue;
-            const cmd = item instanceof Command ? item : new Command(item);
-            if (!cmd.validate()) continue;
-            const compiled = Compiler.compile(cmd.data.code);
-            cmd.data.path = file;
-            cmd.data.functions = extractFunctions(file);
-            registerCommand(cmd, compiled);
+        try {
+            const raw = require(file);
+            const mod = raw?.default ?? raw;
+            const entries = Array.isArray(mod) ? mod : [mod];
+            let functions: ReturnType<typeof extractFunctions> | null = null;
+            for (const item of entries) {
+                if (!item) continue;
+                try {
+                    const cmd = item instanceof Command ? item : new Command(item);
+                    if (!cmd.validate()) {
+                        Logger.warn(`[QuorielEdge] Skipped an invalid module in ${file}`);
+                        continue;
+                    }
+                    const compiled = Compiler.compile(cmd.data.code);
+                    cmd.data.path = file;
+                    cmd.data.functions = functions ??= extractFunctions(file);
+                    registerCommand(cmd, compiled);
+                } catch (error) {
+                    Logger.error(error as any);
+                }
+            }
+        } catch (error) {
+            Logger.error(error as any);
         }
     }
 }

@@ -1,6 +1,7 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$gcd",
     description: "Calculates the greatest common divisor of two numbers",
     version: "1.0.0",

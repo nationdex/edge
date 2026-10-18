@@ -1,7 +1,8 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
 import { performance } from "perf_hooks";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$benchmark",
     description: "Runs a code block N times and returns elapsed time and ops/sec",
     version: "1.0.0",

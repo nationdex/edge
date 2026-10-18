@@ -1,7 +1,7 @@
-import { NativeFunction } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
 import { updateEvents } from "../../core/events";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$updateEvents",
     description: "Updates all events routes",
     version: "1.0.0",

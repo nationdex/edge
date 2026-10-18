@@ -1,8 +1,10 @@
-import { NativeFunction, ArgType } from "@tryforge/forgescript";
-import { caches } from "../../core/utils";
+import { ArgType } from "@tryforge/forgescript";
+import { defineFunction } from "../../define";
+import { EdgeError } from "../../core/errors";
+import { getTable } from "../../core/utils";
 import { writeFileSync } from "fs";
 
-export default new NativeFunction({
+export default defineFunction({
     name: "$exportCache",
     description: "Exports all entries from a cache table to a JSON file",
     version: "1.0.0",
@@ -26,8 +28,12 @@ export default new NativeFunction({
     ],
     execute(ctx, [table, file]) {
         const data: Record<string, unknown> = {};
-        for (const item of caches.get(table)!) data[item[0]] = item[1];
-        writeFileSync(file, JSON.stringify(data));
+        for (const item of getTable(table)) data[item[0]] = item[1];
+        try {
+            writeFileSync(file, JSON.stringify(data));
+        } catch (error: any) {
+            throw new EdgeError(`Cannot write "${file}": ${error.message}`);
+        }
         return this.success();
     }
 });

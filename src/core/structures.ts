@@ -1,10 +1,16 @@
-import { Context } from "@tryforge/forgescript";
+import { Context, Logger } from "@tryforge/forgescript";
 import { join, extname, basename } from "path";
 import { clearCache, scanDirectory } from "./fs";
 
 const structures = new Map<string, any>();
 const wildcards: { prefix: string; data: any }[] = [];
 let path: string | null = null;
+
+const unsafeKeys = new Set(["__proto__", "constructor", "prototype"]);
+
+export function isUnsafeKey(key: string): boolean {
+    return unsafeKeys.has(key);
+}
 
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
     return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -28,6 +34,7 @@ function mergeWithDefault(value: any, def: any): any {
     if (isPlainObject(value) && isPlainObject(def)) {
         const result: Record<string, unknown> = { ...value };
         for (const key in def) {
+            if (isUnsafeKey(key)) continue;
             result[key] = key in value ? mergeWithDefault(value[key], def[key]) : cloneDefault(def[key]);
         }
         return result;
@@ -60,21 +67,33 @@ export async function updateStructures(dir?: string): Promise<void> {
         path = join(process.cwd(), dir);
     }
     const paths = await scanDirectory(path, ".json");
-    structures.clear();
-    wildcards.length = 0;
+    const nextStructures = new Map<string, any>();
+    const nextWildcards: { prefix: string; data: any }[] = [];
     for (const file of paths) {
         const name = basename(file, extname(file));
-        const data = require(file);
-        clearCache(file);
+        let data: any;
+        try {
+            clearCache(file);
+            data = require(file);
+        } catch (error) {
+            Logger.error(`[QuorielEdge] Skipped structure ${file}: ${(error as Error).message}`);
+            continue;
+        } finally {
+            clearCache(file);
+        }
         if (name.endsWith("*")) {
             const prefix = name.slice(0, -1);
-            wildcards.push({ prefix, data });
-            structures.set(prefix, data);
+            nextWildcards.push({ prefix, data });
+            nextStructures.set(prefix, data);
         } else {
-            structures.set(name, data);
+            nextStructures.set(name, data);
         }
     }
-    wildcards.sort((a, b) => b.prefix.length - a.prefix.length);
+    nextWildcards.sort((a, b) => b.prefix.length - a.prefix.length);
+    structures.clear();
+    for (const [key, value] of nextStructures) structures.set(key, value);
+    wildcards.length = 0;
+    wildcards.push(...nextWildcards);
 }
 
 export { structures };
